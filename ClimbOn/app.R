@@ -62,7 +62,7 @@ ui <- shinyMobile::f7Page(
                     shinyMobile::f7Button(
                         inputId = "submit",
                         color = "red", 
-                        label = "Submit"
+                        label = "Record climb"
                     )
                 ), 
                 div(
