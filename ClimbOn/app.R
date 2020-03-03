@@ -1,6 +1,7 @@
 
 # libs
 library(shiny)
+library(shinyMobile)
 library(rdrop2)
 
 # setup
@@ -36,35 +37,55 @@ make_json <- function(climber, height, grade,
 }
 
 # app
-ui <- fluidPage(
-    titlePanel("ClimbOn: Collect climbing data"),
+ui <- f7Page(
     shinyjs::useShinyjs(),
-    div(
-        id = "dataCollect", 
-        selectInput("climber", "Climber", 
-                    c("Kat", "Nick")),
-        selectInput("height", "Wall height",
-                    c("9m", "13m")), 
-        selectInput("grade", "Grade", 
-                    c("5.5", "5.6", "5.7", "5.8", "5.9", "5.10a", "5.10b", "5.10c", "5.10d", 
-                      "5.11a", "5.11b", "5.11c", "5.11d", "5.12a", "5.12b", "5.12c", "5.12d", 
-                      "5.13a", "5.13b", "5.13c", "5.13d", "5.14a")), 
-        selectInput("style", "Ascent style", 
-                    c("Toprope", "Go", "Redpoint", "Onsight", "Flash")), 
-        conditionalPanel(condition = "input.style == 'Toprope' || input.style == 'Go'", 
-                         selectInput("takes", "Number of takes", 
-                                     0:50)),
-        selectInput("send", "Did you topout?", 
-                    c("Yes", "No")), 
-        actionButton("submit", "Submit", class = "btn-primary")
-    ), 
-    shinyjs::hidden(
-        div(
-            id = "fuck_ya",
-            h3("Rock on!"),
-            actionLink("climb_again", "Add another climb")
+    init = f7Init(theme = "dark"),
+    f7SingleLayout(
+        navbar = f7Navbar(
+            title = "Track your climbs", 
+            hairline = T, 
+            shadow = T
+        ), 
+        f7Shadow(
+            intensity = 16, 
+            hover = F, 
+            f7Card(
+                div(
+                    id = "dataCollect", 
+                    selectInput("climber", "Climber", 
+                                c("Kat", "Nick")),
+                    selectInput("height", "Wall height",
+                                c("9m", "13m")), 
+                    selectInput("grade", "Grade", 
+                                c("5.5", "5.6", "5.7", "5.8", "5.9", "5.10a", "5.10b", "5.10c", "5.10d", 
+                                  "5.11a", "5.11b", "5.11c", "5.11d", "5.12a", "5.12b", "5.12c", "5.12d", 
+                                  "5.13a", "5.13b", "5.13c", "5.13d", "5.14a")), 
+                    selectInput("style", "Ascent style", 
+                                c("Toprope", "Go", "Redpoint", "Onsight", "Flash")), 
+                    conditionalPanel(condition = "input.style == 'Toprope' || input.style == 'Go'", 
+                                     selectInput("takes", "Number of takes", 
+                                                 0:50)),
+                    selectInput("send", "Did you topout?", 
+                                c("Yes", "No")), 
+                    f7Button(
+                        inputId = "submit",
+                        color = "red", 
+                        label = "Submit"
+                    )
+                ), 
+                div(
+                    id = "new_climb", 
+                    shinyjs::hidden(
+                        f7Button(
+                            inputId = "fuck_ya",
+                            color = "red", 
+                            label = "Add another climb"
+                        )
+                    )
+                ) 
+            )
         )
-    )  
+    )
 )
 
 server <- function(input, output) {
@@ -92,12 +113,14 @@ server <- function(input, output) {
                   entryTime())
         shinyjs::reset("dataCollect")
         shinyjs::hide("dataCollect")
+        shinyjs::hide("submit")
         shinyjs::show("fuck_ya")
     })
     
-    observeEvent(input$climb_again, {
+    observeEvent(input$fuck_ya, {
         shinyjs::show("dataCollect")
-        shinyjs::hide("fuck_ya")
+        shinyjs::show("submit")
+        shinyjs::hide("new_climb")
     }) 
 }
 
