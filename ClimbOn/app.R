@@ -1,9 +1,11 @@
 
 # libs
 library(shiny)
+library(shinyMobile)
 
 # setup
 rdrop2::drop_auth(rdstoken = "droptoken.rds")
+authenticators <- readRDS("authenticators.rds")
 make_json <- function(climber, height, grade, 
                       style, takes, send) {
     . <- glue::glue(
@@ -28,6 +30,57 @@ make_json <- function(climber, height, grade,
     rdrop2::drop_upload(fileOut, path = "climbing_records")
 }
 
+loginPageUI <- function(..., id, title, label = "Sign in") {
+    submitBttn <- f7Button(inputId = "login", label = label)
+    submitBttn[[2]]$attribs$class <- "item-link list-button f7-action-button"
+    submitBttn[[2]]$name <- "a"
+    shiny::tagList(
+        shinyMobile:::f7InputsDeps(),
+        shiny::tags$div(
+            id = id,
+            `data-start-open` = "[true]",
+            class = "login-screen",
+            shiny::tags$div(class = "view", shiny::tags$div(
+                class = "page",
+                shiny::tags$div(
+                    class = "page-content login-screen-content",
+                    shiny::tags$div(class = "login-screen-title",
+                                    title),
+                    shiny::tags$form(
+                        shiny::tags$div(class = "list",
+                                        shiny::tags$ul(
+                                            f7Text(
+                                                inputId = "login_user",
+                                                label = "",
+                                                placeholder = "Username"
+                                            ),
+                                            f7Password(
+                                                inputId = "login_password",
+                                                label = "",
+                                                placeholder = "Password"
+                                            ),
+                                            ...
+                                        )),
+                        shiny::tags$div(class = "list", shiny::tags$ul(shiny::tags$li(submitBttn)))
+                    )
+                )
+            ))
+        )
+    )
+}
+
+
+authenticate <- function(user, password) {
+    if (!(user %in% authenticators$users)) {
+        return(FALSE)
+    }
+    pw <- authenticators$passwords[authenticators$users == user]
+    if (password != pw) {
+        return(FALSE)
+    }
+    return(TRUE)
+}
+
 # app
 ui <- shinyMobile::f7Page(
     shinyjs::useShinyjs(),
@@ -38,6 +91,10 @@ ui <- shinyMobile::f7Page(
             title = "If you don't want to fall, you won't...", 
             hairline = T, 
             shadow = F
+        ),
+        loginPageUI(id = "loginPage", title = "Get climbing"),
+        shinyjs::hidden(
+            f7BlockHeader(text = textOutput("authentication"))
         ), 
         shinyMobile::f7Shadow(
             intensity = 5, 
@@ -67,20 +124,39 @@ ui <- shinyMobile::f7Page(
                 ), 
                 div(
                     id = "new_climb", 
-                    shinyjs::hidden(
-                        shinyMobile::f7Button(
-                            inputId = "fuck_ya",
-                            color = "red", 
-                            label = "Add another climb"
+                    shinyMobile::f7Button(
+                        inputId = "fuck_ya",
+                        color = "red", 
+                        label = "Add another climb"
                         )
                     )
                 ) 
             )
         )
     )
-)
 
-server <- function(input, output) {
+
+server <- function(input, output, session) {
+    
+    check <- reactive({ authenticate(input$login_user, input$login_password) })
+    observeEvent(input$login, {
+        if (isFALSE(check())) {
+            updateF7Login(id = "loginPage")
+        } else {
+            updateF7Login(id = "loginPage", 
+                          user = input$login_user, 
+                          password = input$login_password)
+        }
+    })
+    user <- reactive({ input$login_user })
+    password <- reactive({ input$login_password })
+    output$authentication <- renderText({
+        req(user())
+        req(password())
+        "User authenticated..."
+    })
+    
+    shinyjs::hide("new_climb")
     
     climber <- reactive({ input$climber })
     height <- reactive({ input$height })
@@ -105,7 +181,7 @@ server <- function(input, output) {
         shinyjs::reset("dataCollect")
         shinyjs::hide("dataCollect")
         shinyjs::hide("submit")
-        shinyjs::show("fuck_ya")
+        shinyjs::show("new_climb")
     })
     
     observeEvent(input$fuck_ya, {
