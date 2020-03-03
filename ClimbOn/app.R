@@ -31,15 +31,16 @@ make_json <- function(climber, height, grade,
 # app
 ui <- shinyMobile::f7Page(
     shinyjs::useShinyjs(),
-    init = shinyMobile::f7Init(theme = "dark"),
+    shiny::tags$link(rel = "apple-touch-icon", href = "icons/apple-touch-icon.png"),
+    init = shinyMobile::f7Init(theme = "light"),
     shinyMobile::f7SingleLayout(
         navbar = shinyMobile::f7Navbar(
-            title = "Track your climbs", 
+            title = "If you don't want to fall, you won't...", 
             hairline = T, 
-            shadow = T
+            shadow = F
         ), 
         shinyMobile::f7Shadow(
-            intensity = 16, 
+            intensity = 5, 
             hover = F, 
             shinyMobile::f7Card(
                 div(
