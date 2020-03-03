@@ -1,19 +1,11 @@
 
 # libs
 library(shiny)
-library(shinyMobile)
-library(rdrop2)
 
 # setup
-fields <- c("climber", "height", "grade", "style", "takes", "send")
-collectDir <- "climbing_records"
-
-entryTime <- function() {
-    as.character(Sys.time())
-}
-
+rdrop2::drop_auth(rdstoken = "droptoken.rds")
 make_json <- function(climber, height, grade, 
-                      style, takes, send, time_stamp) {
+                      style, takes, send) {
     . <- glue::glue(
     '[
       {{ 
@@ -23,7 +15,7 @@ make_json <- function(climber, height, grade,
         "style": "{style}",  
         "takes": "{takes}",  
         "send": "{send}", 
-        "time_stamp": "{time_stamp}"
+        "time_stamp": "{as.character(Sys.time())}"
       }}
     ]'
     )
@@ -33,23 +25,23 @@ make_json <- function(climber, height, grade,
                        climber)
     fileOut <- file.path(tempdir(), fileOut)
     write(., fileOut)
-    drop_upload(fileOut, path = collectDir)
+    rdrop2::drop_upload(fileOut, path = "climbing_records")
 }
 
 # app
-ui <- f7Page(
+ui <- shinyMobile::f7Page(
     shinyjs::useShinyjs(),
-    init = f7Init(theme = "dark"),
-    f7SingleLayout(
-        navbar = f7Navbar(
+    init = shinyMobile::f7Init(theme = "dark"),
+    shinyMobile::f7SingleLayout(
+        navbar = shinyMobile::f7Navbar(
             title = "Track your climbs", 
             hairline = T, 
             shadow = T
         ), 
-        f7Shadow(
+        shinyMobile::f7Shadow(
             intensity = 16, 
             hover = F, 
-            f7Card(
+            shinyMobile::f7Card(
                 div(
                     id = "dataCollect", 
                     selectInput("climber", "Climber", 
@@ -63,11 +55,10 @@ ui <- f7Page(
                     selectInput("style", "Ascent style", 
                                 c("Toprope", "Go", "Redpoint", "Onsight", "Flash")), 
                     conditionalPanel(condition = "input.style == 'Toprope' || input.style == 'Go'", 
-                                     selectInput("takes", "Number of takes", 
-                                                 0:50)),
+                                     selectInput("takes", "Number of takes", 0:50)),
                     selectInput("send", "Did you topout?", 
                                 c("Yes", "No")), 
-                    f7Button(
+                    shinyMobile::f7Button(
                         inputId = "submit",
                         color = "red", 
                         label = "Submit"
@@ -76,7 +67,7 @@ ui <- f7Page(
                 div(
                     id = "new_climb", 
                     shinyjs::hidden(
-                        f7Button(
+                        shinyMobile::f7Button(
                             inputId = "fuck_ya",
                             color = "red", 
                             label = "Add another climb"
@@ -109,8 +100,7 @@ server <- function(input, output) {
                   grade(), 
                   style(), 
                   takes(), 
-                  send(), 
-                  entryTime())
+                  send())
         shinyjs::reset("dataCollect")
         shinyjs::hide("dataCollect")
         shinyjs::hide("submit")
