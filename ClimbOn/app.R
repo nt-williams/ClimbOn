@@ -16,6 +16,7 @@ make_json <- function(climber, height, grade,
         "grade": "{grade}", 
         "style": "{style}",  
         "takes": "{takes}",  
+        "characteristics": "{characteristics}",
         "send": "{send}", 
         "time_stamp": "{as.character(Sys.time())}"
       }}
@@ -114,6 +115,9 @@ ui <- shinyMobile::f7Page(
                                 c("Toprope", "Go", "Redpoint", "Onsight", "Flash")), 
                     conditionalPanel(condition = "input.style == 'Toprope' || input.style == 'Go'", 
                                      selectInput("takes", "Number of takes", 0:50)),
+                    shinyMobile::f7checkBoxGroup("characteristics", "Route Characteristics",
+                                c("Strength", "Power", "Technical", "Overhang"),
+                                selected = NULL),
                     selectInput("send", "Did you topout?", 
                                 c("Yes", "No")), 
                     shinyMobile::f7Button(
@@ -169,6 +173,7 @@ server <- function(input, output, session) {
             input$takes
         }
     })
+    characteristics <- reactive({ input$characteristics })
     send <- reactive({ input$send })
     
     observeEvent(input$submit, {
@@ -176,7 +181,8 @@ server <- function(input, output, session) {
                   height(), 
                   grade(), 
                   style(), 
-                  takes(), 
+                  takes(),
+                  characteristics(),
                   send())
         shinyjs::reset("dataCollect")
         shinyjs::hide("dataCollect")
