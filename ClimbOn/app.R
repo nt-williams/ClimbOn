@@ -116,7 +116,7 @@ ui <- shinyMobile::f7Page(
                     conditionalPanel(condition = "input.style == 'Toprope' || input.style == 'Go'", 
                                      selectInput("takes", "Number of takes", 0:50)),
                     shinyMobile::f7checkBoxGroup("characteristics", "Route Characteristics",
-                                c("Strength", "Power", "Technical", "Overhang"),
+                                c("Strength", "Power", "Technical", "Overhang", "Crimp"),
                                 selected = NULL),
                     selectInput("send", "Did you topout?", 
                                 c("Yes", "No")), 
