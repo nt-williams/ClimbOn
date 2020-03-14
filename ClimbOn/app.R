@@ -173,7 +173,7 @@ server <- function(input, output, session) {
             input$takes
         }
     })
-    characteristics <- reactive({ input$characteristics })
+    characteristics <- reactive({ print(input$characteristics, collapse = ", ") })
     send <- reactive({ input$send })
     
     observeEvent(input$submit, {
